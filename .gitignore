@@ -5,3 +5,7 @@ plugins/*-swh.lv2/manifest.ttl
 plugins/*-swh.lv2/manifest.ttl.in
 plugins/*-swh.lv2/plugin.c
 plugins/*-swh.lv2/plugin.ttl
+plugins/*.lv2/manifest.ttl
+plugins/*.lv2/manifest.ttl.in
+plugins/*.lv2/plugin.c
+plugins/*.lv2/plugin.ttl
