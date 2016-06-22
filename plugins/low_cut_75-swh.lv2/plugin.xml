@@ -33,10 +33,10 @@
                   }
         
 
-		  butterworth_stage(gt_hp, 1, GUIcutoff_hp, 1.0f, sample_rate);
+		  butterworth_stage(gt_hp, 1, GUIcutoff_hp, 1.2f, sample_rate);
 		  iir_process_buffer_1s_5(iirf_hp, gt_hp, tempIn, tempOut, sample_count);
 
-                  butterworth_stage(gt_lp, 0, GUIcutoff_lp, 1.0f, sample_rate);
+                  butterworth_stage(gt_lp, 0, GUIcutoff_lp, 1.2f, sample_rate);
                   iir_process_buffer_1s_5(iirf_lp, gt_lp, tempOut, tempIn, sample_count);
 
 
@@ -54,13 +54,13 @@
                   plugin_data->gt_hp = init_iir_stage(IIR_STAGE_LOWPASS,1,3,2);
                   plugin_data->iirf_hp = init_iirf_t(plugin_data->gt_hp);
                   butterworth_stage(plugin_data->gt_hp, 1, *(plugin_data->GUIcutoff_hp), 
-		  			   1.0f, 
+		  			   1.2f, 
 					   sample_rate);
 
                   plugin_data->gt_lp = init_iir_stage(IIR_STAGE_LOWPASS,1,3,2);
                   plugin_data->iirf_lp = init_iirf_t(plugin_data->gt_lp);
                   butterworth_stage(plugin_data->gt_lp, 0, *(plugin_data->GUIcutoff_lp), 
-		  			   1.0f, 
+		  			   1.2f, 
 					   sample_rate);
 
 
@@ -82,12 +82,12 @@
 
    <port label="GUIcutoff_hp" dir="input" type="control" hint="default_low, logarithmic">
 	<name>Cutoff Frequency (Hz)</name>
- 	<range min="20" max="1000"/>
+ 	<range min="10" max="1000"/>
 </port>
 
    <port label="GUIcutoff_lp" dir="input" type="control" hint="default_low, logarithmic">
 	<name>Cutoff Frequency (Hz)</name>
- 	<range min="3000" max="19000"/>
+ 	<range min="3000" max="20000"/>
    </port>
 
 
