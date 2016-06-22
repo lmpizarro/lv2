@@ -7,42 +7,42 @@
 	<meta name="copyright" value="GPL"/>
 	<meta name="properties" value="HARD_RT_CAPABLE"/>
 	<code><![CDATA[
-		#include "util/iir.h"
-                #include "util/buffer.h"
-                #include "util/biquad.h"
+	  #include "util/iir.h"
+          #include "util/buffer.h"
+          #include "util/biquad.h"
 	 ]]></code>
  </global>
         <plugin label="low_cut_75" id="12043" class="HighpassPlugin">
         	<name>Highpass 75 GLAME Butterworth</name>
                 <p> Butterworth highpass filter </p>
 
-                <callback event="instantiate"><![CDATA[
+           <callback event="instantiate"><![CDATA[
 
-			sample_rate = s_rate;
-filters = calloc(3, sizeof(biquad));
-biquad_init(&filters[0]);
-biquad_init(&filters[1]);
-biquad_init(&filters[2]);
+		sample_rate = s_rate;
+                filters = calloc(3, sizeof(biquad));
+                biquad_init(&filters[0]);
+                biquad_init(&filters[1]);
+                biquad_init(&filters[2]);
 
-                 ]]></callback>
+             ]]></callback>
 		<callback event="run"><![CDATA[
 
-			float * tempIn;
-			float * tempOut;
-			unsigned int pos;
-float in;
+		float * tempIn;
+		float * tempOut;
+		unsigned int pos;
+		float in;
 
-eq_set_params(&filters[0], fc_1, gain_1, bw_1, sample_rate);
-eq_set_params(&filters[1], fc_2, gain_2, bw_2, sample_rate);
-eq_set_params(&filters[2], fc_3, gain_3, bw_3, sample_rate);
+                eq_set_params(&filters[0], fc_1, gain_1, abs(gain_1) * (-0.0909f) + 2.5909f, sample_rate);
+                eq_set_params(&filters[1], fc_2, gain_2, abs(gain_2) * (-0.0909f) + 2.5909f, sample_rate);
+                eq_set_params(&filters[2], fc_3, gain_3, abs(gain_3) * (-0.0909f) + 2.5909f, sample_rate);
 
 
-		  tempIn = (float *) calloc(sample_count, sizeof(float));
-		  tempOut = (float *) calloc(sample_count, sizeof(float));
+		tempIn = (float *) calloc(sample_count, sizeof(float));
+		tempOut = (float *) calloc(sample_count, sizeof(float));
 
-		  for (pos = 0; pos < sample_count; pos++) {
-		     tempIn[pos] = input[pos] * DB_CO(GUIInGain);
-                  }
+		for (pos = 0; pos < sample_count; pos++) {
+		    tempIn[pos] = input[pos] * DB_CO(GUIInGain);
+                }
         
 
 		  butterworth_stage(gt_hp, 1, GUIcutoff_hp, 1.2f, sample_rate);
@@ -123,11 +123,6 @@ free(plugin_data->filters);
       <range min="40" max="400"/>
     </port>
 
-    <port label="bw_1" dir="input" type="control" hint="default_1">
-      <name>Band 1 bandwidth (octaves)</name>
-      <range min="1" max="4"/>
-    </port>
-
     <port label="gain_2" dir="input" type="control" hint="default_0">
       <name>Band 2 gain (dB)</name>
       <range min="-12" max="+12"/>
@@ -138,10 +133,6 @@ free(plugin_data->filters);
       <range min="200" max="4000"/>
     </port>
 
-    <port label="bw_2" dir="input" type="control" hint="default_1">
-      <name>Band 2 bandwidth (octaves)</name>
-      <range min="1" max="4"/>
-    </port>
 
     <port label="gain_3" dir="input" type="control" hint="default_0">
       <name>Band 3 gain (dB)</name>
@@ -151,11 +142,6 @@ free(plugin_data->filters);
     <port label="fc_3" dir="input" type="control" hint="logarithmic,default_high">
       <name>Band 3 frequency (Hz)</name>
       <range min="800" max="15000"/>
-    </port>
-
-    <port label="bw_3" dir="input" type="control" hint="default_1">
-      <name>Band 3 bandwidth (octaves)</name>
-      <range min="1" max="4"/>
     </port>
 
 
