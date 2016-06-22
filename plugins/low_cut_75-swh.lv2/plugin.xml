@@ -1,0 +1,59 @@
+<?xml version="1.0" ?>
+<!DOCTYPE ladspa SYSTEM "ladspa-swh.dtd">
+<?xml-stylesheet href="ladspa.css" type="text/css" ?>
+<ladspa>
+	<global>
+		<meta name="maker" value="Luis Maria Pizarro &lt;lmpizarro@gmail.com&gt;"/>
+		<meta name="copyright" value="GPL"/>
+		<meta name="properties" value="HARD_RT_CAPABLE"/>
+		<code><![CDATA[
+			#include "util/iir.h"
+                        #include "util/buffer.h"
+		 ]]></code>
+ </global>
+        <plugin label="low_cut_75" id="12043" class="HighpassPlugin">
+		<name>Highpass 75 GLAME Butterworth</name>
+                <p> Butterworth highpass filter </p>
+
+                <callback event="instantiate">
+                  sample_rate = s_rate;
+                </callback>
+		<callback event="run">
+                  butterworth_stage(gt, 1, cutoff, 1.0f, sample_rate);
+                  iir_process_buffer_1s_5(iirf, gt, input, output, sample_count);
+                </callback>
+
+                <callback event="activate">                  
+                  plugin_data->gt = init_iir_stage(IIR_STAGE_LOWPASS,1,3,2);
+                  plugin_data->iirf = init_iirf_t(plugin_data->gt);
+                  butterworth_stage(plugin_data->gt, 1, *(plugin_data->cutoff), 
+		  			   1.0f, 
+					   sample_rate);
+                </callback>
+
+                <callback event="cleanup">
+                  free_iirf_t(plugin_data->iirf, plugin_data->gt);
+                  free_iir_stage(plugin_data->gt);
+                </callback>
+
+                <port label="cutoff" dir="input" type="control" hint="default_low, logarithmic">
+			<name>Cutoff Frequency (Hz)</name>
+ 			<range min="20" max="1000"/>
+		</port>
+
+
+                
+		<port label="input" dir="input" type="audio">
+			<name>Input</name>
+		</port>
+
+		<port label="output" dir="output" type="audio">
+			<name>Output</name>
+		</port>
+		
+                <instance-data label="iirf" type="iirf_t*"/>
+                <instance-data label="gt" type="iir_stage_t*"/>  
+                <instance-data label="sample_rate" type="long"/>           
+  
+	</plugin>
+</ladspa>

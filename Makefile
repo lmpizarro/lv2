@@ -27,8 +27,8 @@ single_para-swh.lv2 sinus_wavewrapper-swh.lv2 smooth_decimate-swh.lv2 \
 split-swh.lv2 surround_encoder-swh.lv2 svf-swh.lv2 \
 tape_delay-swh.lv2 transient-swh.lv2 triple_para-swh.lv2 valve-swh.lv2 \
 valve_rect-swh.lv2 vynil-swh.lv2 wave_terrain-swh.lv2 xfade-swh.lv2 \
-zm1-swh.lv2 offset-swh.lv2 a_law-swh.lv2 u_law-swh.lv2 \
-low_cut_75.lv2
+zm1-swh.lv2 offset-swh.lv2 low_cut_75-swh.lv2 \
+a_law-swh.lv2 u_law-swh.lv2
 
 FFT_PLUGINS = mbeq-swh.lv2 pitch_scale-swh.lv2
 
@@ -87,7 +87,7 @@ util: util/blo.o util/iir.o util/db.o util/rms.o util/pitchscale.o
 clean: dist-clean
 
 dist-clean:
-	rm -f plugins/*/*.{$(EXT),o} plugins/*/*.o plugins/*/manifest.ttl util/*.o gverb/*.o
+	rm -f plugins/*/*.{$(EXT),o} plugins/*/*.o plugins/*/*.so plugins/*/*.c plugins/*/*.ttl  plugins/*/*.ttl.in util/*.o gverb/*.o
 
 real-clean:
 	rm -f plugins/*/*.{c,ttl,$(EXT),o,in} util/*.o gverb/*.o

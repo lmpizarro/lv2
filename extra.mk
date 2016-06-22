@@ -8,6 +8,7 @@ butterworth_LDFLAGS = util/iir.o
 highpass_iir_LDFLAGS = util/iir.o
 lowpass_iir_LDFLAGS = util/iir.o
 notch_iir_LDFLAGS = util/iir.o
+low_cut_75_LDFLAGS = util/iir.o
 
 gverb_LDFLAGS = gverb/gverbdsp.o gverb/gverb.o
 
