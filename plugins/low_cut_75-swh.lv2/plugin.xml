@@ -36,7 +36,7 @@
                   free_iir_stage(plugin_data->gt);
                 </callback>
 
-                <port label="cutoff" dir="input" type="control" hint="default_low, logarithmic">
+                <port label="cutoff" dir="input" type="control" hint="default_min, logarithmic">
 			<name>Cutoff Frequency (Hz)</name>
  			<range min="20" max="1000"/>
 		</port>
