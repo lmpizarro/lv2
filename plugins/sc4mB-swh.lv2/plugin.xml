@@ -48,7 +48,24 @@
     ]]></callback>
 
     <callback event="run"><![CDATA[
+      //  el ratio de 1:ratio
+      // zona limiter 2 * Threshold + 20 / 0, -5  
+      // zona compresor 0.32 * Threshold + 11.6 / -5, -30 
+      // zona leveller 0.04 * Threshold + 3.35 / -30, -50
       unsigned long pos;
+      float ratio;
+      const float knee = 3.0f;
+      const float attack = 1.5f;
+      const float release = 30.0f;
+
+      if (threshold <= 0.0f && threshold > -5.0f)
+         ratio =  2.0f * threshold + 20.0f; 
+      if (threshold <= -5.0f && threshold > -30.0f)
+         ratio =  0.32f * threshold + 11.6f; 
+      if (threshold <= -30.0f)
+         ratio =  0.04f * threshold + 3.35f; 
+
+
 
       const float ga = attack < 2.0f ? 0.0f : as[f_round(attack * 0.001f * (float)(A_TBL-1))];
       const float gr = as[f_round(release * 0.001f * (float)(A_TBL-1))];
@@ -58,6 +75,8 @@
       const float knee_max = db2lin(threshold + knee);
       const float ef_a = ga * 0.25f;
       const float ef_ai = 1.0f - ef_a;
+
+      const float rms_peak = 0.0f;
 
       for (pos = 0; pos < sample_count; pos++) {
        	const float lev_in = input[pos] * DB_CO(GUIInGain);
@@ -112,27 +131,25 @@
       <range min="-12" max="+12"/>
     </port>
 
-
-
-
-    <port label="rms_peak" dir="input" type="control" hint="default_minimum">
+    <!--port label="rms_peak" dir="input" type="control" hint="default_minimum">
       <name>RMS/peak</name>
       <p>The balance between the RMS and peak envelope followers.</p>
-      <p>RMS is generally better for subtle, musical compression and peak is better for heavier, fast compression and percussion.</p>
+      <p>RMS is generally better for subtle, musical compression and peak 
+	 is better for heavier, fast compression and percussion.</p>
       <range min="0" max="1"/>
-    </port>
+    </port-->
 
-    <port label="attack" dir="input" type="control" hint="default_low">
+    <!-- port label="attack" dir="input" type="control" hint="default_low">
       <name>Attack time (ms)</name>
       <p>The attack time in milliseconds.</p>
       <range min="1.5" max="400"/>
-    </port>
+    </port-->
 
-    <port label="release" dir="input" type="control" hint="default_middle">
+    <!-- port label="release" dir="input" type="control" hint="default_middle">
       <name>Release time (ms)</name>
       <p>The release time in milliseconds.</p>
       <range min="2" max="800"/>
-    </port>
+    </port-->
 
     <port label="threshold" dir="input" type="control" hint="default_maximum">
       <name>Threshold level (dB)</name>
@@ -140,17 +157,17 @@
       <range min="-50" max="0"/>
     </port>
 
-    <port label="ratio" dir="input" type="control" hint="default_1">
+    <!--port label="ratio" dir="input" type="control" hint="default_1">
       <name>Ratio (1:n)</name>
       <p>The gain reduction ratio used when the signal level exceeds the threshold.</p>
       <range min="1" max="20"/>
-    </port>
+    </port-->
 
-    <port label="knee" dir="input" type="control" hint="default_low">
+    <!--port label="knee" dir="input" type="control" hint="default_low">
       <name>Knee radius (dB)</name>
       <p>The distance from the threshold where the knee curve starts.</p>
       <range min="1" max="10"/>
-    </port>
+    </port-->
 
     <port label="makeup_gain" dir="input" type="control" hint="default_0">
       <name>Makeup gain (dB)</name>
