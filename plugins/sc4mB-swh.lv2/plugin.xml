@@ -58,6 +58,7 @@
       const float attack = 1.5f;
       const float release = 30.0f;
 
+      ratio = 1.0f;
       if (threshold <= 0.0f && threshold > -5.0f)
          ratio =  2.0f * threshold + 20.0f; 
       if (threshold <= -5.0f && threshold > -30.0f)
