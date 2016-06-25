@@ -64,7 +64,7 @@ gverb: gverb/gverb.c gverb/gverbdsp.c gverb/gverb.o gverb/gverbdsp.o
 util/pitchscale.o:
 	$(CC) $(PLUGIN_CFLAGS) $(fftw3_CFLAGS) $*.c -c -o $@
 
-util: util/blo.o util/iir.o util/db.o util/rms.o util/pitchscale.o
+util: util/blo.o util/iir.o util/db.o util/rms.o util/pitchscale.o util/tf_curves.o
 
 %.c: OBJ = $(shell echo $@ | sed 's/\.c$$/-@OS@.$(EXT)/')
 %.c: %.xml xslt/source.xsl xslt/manifest.xsl

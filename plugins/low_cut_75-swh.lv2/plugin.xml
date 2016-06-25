@@ -10,6 +10,7 @@
   #include "util/iir.h"
   #include "util/buffer.h"
   #include "util/biquad.h"
+  #include "util/tf_curves.h"
 ]]></code>
 </global>
     <plugin label="low_cut_75" id="12043" class="HighpassPlugin">
@@ -17,13 +18,13 @@
     <p> Butterworth highpass filter </p>
 
     <callback event="instantiate"><![CDATA[
-
        sample_rate = s_rate;
        filters = calloc(3, sizeof(biquad));
        biquad_init(&filters[0]);
        biquad_init(&filters[1]);
        biquad_init(&filters[2]);
-
+       comp_curve = CMPR_C(-18.0f, 2.0f, 3.0f);
+       CMPR_Set_RBT(comp_curve);
     ]]></callback>
     <callback event="run"><![CDATA[
 
@@ -32,19 +33,20 @@
        unsigned int pos;
        float in;
 
+       tempIn = (float *) calloc(sample_count, sizeof(float));
+       tempOut = (float *) calloc(sample_count, sizeof(float));
+
        eq_set_params(&filters[0], fc_1, gain_1, abs(gain_1) * (-0.0909f) + 2.5909f, sample_rate);
        eq_set_params(&filters[1], fc_2, gain_2, abs(gain_2) * (-0.0909f) + 2.5909f, sample_rate);
        eq_set_params(&filters[2], fc_3, gain_3, abs(gain_3) * (-0.0909f) + 2.5909f, sample_rate);
 
-
-       tempIn = (float *) calloc(sample_count, sizeof(float));
-       tempOut = (float *) calloc(sample_count, sizeof(float));
+       CMPR_Set_T(comp_curve, GUITrheshold);
+       CMPR_Set_RBT(comp_curve );
 
        for (pos = 0; pos < sample_count; pos++) {
           tempIn[pos] = input[pos] * DB_CO(GUIInGain);
        }
         
-
        butterworth_stage(gt_hp, 1, GUIcutoff_hp, 1.2f, sample_rate);
        iir_process_buffer_1s_5(iirf_hp, gt_hp, tempIn, tempOut, sample_count);
 
@@ -59,9 +61,8 @@
        }
 
        for (pos = 0; pos < sample_count; pos++){
-           buffer_write(output[pos], tempIn[pos] * DB_CO(GUIOutGain));
+           buffer_write(output[pos], CMPR_R(comp_curve, tempIn[pos]) * DB_CO(GUIOutGain));
        }
-        
 
        free(tempIn);
        free(tempOut);
@@ -93,6 +94,7 @@
        free_iirf_t(plugin_data->iirf_lp, plugin_data->gt_lp);
        free_iir_stage(plugin_data->gt_lp);
        free(plugin_data->filters);
+       CMPR_D(plugin_data->comp_curve);
    ]]></callback>
 
     <port label="GUIInGain" dir="input" type="control" hint="default_0">
@@ -132,7 +134,6 @@
       <range min="200" max="4000"/>
     </port>
 
-
     <port label="gain_3" dir="input" type="control" hint="default_0">
       <name>Band 3 gain (dB)</name>
       <range min="-12" max="+12"/>
@@ -143,31 +144,35 @@
       <range min="800" max="15000"/>
     </port>
 
+    <port label="GUITrheshold" dir="input" type="control" hint="default_0">
+     <name>Thresh</name>
+     <p>The gain in the output signal, in decibels.</p>
+     <range min="-50" max="+0"/>
+    </port>
 
-
-
-   <port label="GUIOutGain" dir="input" type="control" hint="default_0">
+    <port label="GUIOutGain" dir="input" type="control" hint="default_0">
      <name>OutG</name>
      <p>The gain in the output signal, in decibels.</p>
      <range min="-12" max="+12"/>
-   </port>
+    </port>
 
-		<port label="input" dir="input" type="audio">
-			<name>Input</name>
-		</port>
+    <port label="input" dir="input" type="audio">
+     <name>Input</name>
+    </port>
 
-		<port label="output" dir="output" type="audio">
-			<name>Output</name>
-		</port>
+    <port label="output" dir="output" type="audio">
+	<name>Output</name>
+    </port>
 		
-                <instance-data label="iirf_hp" type="iirf_t*"/>
-		<instance-data label="gt_hp" type="iir_stage_t*"/>  
+    <instance-data label="iirf_hp" type="iirf_t*"/>
+    <instance-data label="gt_hp" type="iir_stage_t*"/>  
 
-                <instance-data label="iirf_lp" type="iirf_t*"/>
-		<instance-data label="gt_lp" type="iir_stage_t*"/>  
+    <instance-data label="iirf_lp" type="iirf_t*"/>
+    <instance-data label="gt_lp" type="iir_stage_t*"/>  
+    <instance-data label="comp_curve" type="CMPR *"/>  
 
-                <instance-data label="sample_rate" type="float"/>           
-                <instance-data label="filters" type="biquad *"/>
+    <instance-data label="sample_rate" type="float"/>           
+    <instance-data label="filters" type="biquad *"/>
   
-	</plugin>
+    </plugin>
 </ladspa>

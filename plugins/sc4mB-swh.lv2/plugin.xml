@@ -40,6 +40,7 @@
       }
 
       db_init();
+
     ]]></callback>
 
     <callback event="cleanup"><![CDATA[
@@ -52,6 +53,13 @@
       // zona limiter 2 * Threshold + 20 / 0, -5  
       // zona compresor 0.32 * Threshold + 11.6 / -5, -30 
       // zona leveller 0.04 * Threshold + 3.35 / -30, -50
+
+       float * tempIn;
+       float * tempOut;
+       tempIn = (float *) calloc(sample_count, sizeof(float));
+       tempOut = (float *) calloc(sample_count, sizeof(float));
+
+
       unsigned long pos;
       float ratio;
       const float knee = 3.0f;
@@ -79,8 +87,12 @@
 
       const float rms_peak = 0.0f;
 
+      for (pos = 0; pos < sample_count; pos++){
+        tempIn[pos] = input[pos];
+       }
+
       for (pos = 0; pos < sample_count; pos++) {
-       	const float lev_in = input[pos] * DB_CO(GUIInGain);
+       	const float lev_in = tempIn[pos];
 	sum += lev_in * lev_in;
 
         if (amp > env_rms) {
@@ -111,7 +123,7 @@
           }
         }
         gain = gain * ef_a + gain_t * ef_ai;
-        buffer_write(output[pos], input[pos] * gain * mug * DB_CO(GUIInGain));
+        buffer_write(output[pos], tempIn[pos] * gain * mug);
       }
       plugin_data->sum = sum;
       plugin_data->amp = amp;
@@ -124,6 +136,10 @@
 
       *(plugin_data->amplitude) = lin2db(env);
       *(plugin_data->gain_red) = lin2db(gain);
+
+
+       free(tempIn);
+       free(tempOut);
     ]]></callback>
 
     <port label="GUIInGain" dir="input" type="control" hint="default_0">
