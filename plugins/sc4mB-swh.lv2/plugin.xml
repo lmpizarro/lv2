@@ -10,7 +10,9 @@
     <code><![CDATA[
       #include "util/db.h"
       #include "util/rms.h"
-
+      #include "util/iir.h"
+      #include "util/buffer.h"
+      #include "util/biquad.h"
       #define A_TBL 256
     ]]></code>
   </global>
@@ -21,7 +23,7 @@
 
     <callback event="instantiate"><![CDATA[
       unsigned int i;
-      float sample_rate = (float)s_rate;
+      sample_rate = (float)s_rate;
 
       rms = rms_env_new();
       sum = 0.0f;
@@ -41,12 +43,41 @@
 
       db_init();
 
+       filters = calloc(3, sizeof(biquad));
+       biquad_init(&filters[0]);
+       biquad_init(&filters[1]);
+       biquad_init(&filters[2]);
+
     ]]></callback>
 
     <callback event="cleanup"><![CDATA[
       rms_env_free(plugin_data->rms);
       free(plugin_data->as);
     ]]></callback>
+
+   <callback event="activate"><![CDATA[
+                 
+       plugin_data->gt_hp = init_iir_stage(IIR_STAGE_LOWPASS,1,3,2);
+       plugin_data->iirf_hp = init_iirf_t(plugin_data->gt_hp);
+       butterworth_stage(plugin_data->gt_hp, 1, *(plugin_data->GUIcutoff_hp), 
+		  			   1.2f, 
+					   sample_rate);
+
+       plugin_data->gt_lp = init_iir_stage(IIR_STAGE_LOWPASS,1,3,2);
+       plugin_data->iirf_lp = init_iirf_t(plugin_data->gt_lp);
+       butterworth_stage(plugin_data->gt_lp, 0, *(plugin_data->GUIcutoff_lp), 
+		  			   1.2f, 
+					   sample_rate);
+
+       biquad_init(&filters[0]);
+       biquad_init(&filters[1]);
+       biquad_init(&filters[2]);
+
+
+   ]]></callback>
+
+
+
 
     <callback event="run"><![CDATA[
       //  el ratio de 1:ratio
@@ -59,6 +90,12 @@
        tempIn = (float *) calloc(sample_count, sizeof(float));
        tempOut = (float *) calloc(sample_count, sizeof(float));
 
+       eq_set_params(&filters[0], fc_1, gain_1, abs(gain_1) * (-0.0909f) + 2.5909f, sample_rate);
+       eq_set_params(&filters[1], fc_2, gain_2, abs(gain_2) * (-0.0909f) + 2.5909f, sample_rate);
+       eq_set_params(&filters[2], fc_3, gain_3, abs(gain_3) * (-0.0909f) + 2.5909f, sample_rate);
+
+
+       float in;
 
       unsigned long pos;
       float ratio;
@@ -66,15 +103,14 @@
       const float attack = 1.5f;
       const float release = 30.0f;
 
-      ratio = 1.0f;
+      ratio = 1.05f;
       if (threshold <= 0.0f && threshold > -5.0f)
          ratio =  2.0f * threshold + 20.0f; 
       if (threshold <= -5.0f && threshold > -30.0f)
          ratio =  0.32f * threshold + 11.6f; 
-      if (threshold <= -30.0f)
-         ratio =  0.04f * threshold + 3.35f; 
-
-
+      if (threshold <= -30.0f && threshold >= -50.0f)
+         ratio =  0.045f * threshold + 3.35f; 
+        
 
       const float ga = attack < 2.0f ? 0.0f : as[f_round(attack * 0.001f * (float)(A_TBL-1))];
       const float gr = as[f_round(release * 0.001f * (float)(A_TBL-1))];
@@ -88,9 +124,25 @@
       const float rms_peak = 0.0f;
 
       for (pos = 0; pos < sample_count; pos++){
-        tempIn[pos] = input[pos];
+        tempIn[pos] = input[pos] * DB_CO(GUIInGain);
+      }
+
+      butterworth_stage(gt_hp, 1, GUIcutoff_hp, 1.2f, sample_rate);
+      iir_process_buffer_1s_5(iirf_hp, gt_hp, tempIn, tempOut, sample_count);
+
+      butterworth_stage(gt_lp, 0, GUIcutoff_lp, 1.2f, sample_rate);
+      iir_process_buffer_1s_5(iirf_lp, gt_lp, tempOut, tempIn, sample_count);
+
+      // peak stage
+       for (pos = 0; pos < sample_count; pos++) {
+         in = biquad_run(&filters[0], tempIn[pos]);
+         in = biquad_run(&filters[1], in);
+         in = biquad_run(&filters[2], in);
+         tempIn[pos]= in;
        }
 
+
+      // compressor stage
       for (pos = 0; pos < sample_count; pos++) {
        	const float lev_in = tempIn[pos];
 	sum += lev_in * lev_in;
@@ -147,6 +199,48 @@
       <p>The gain in the input signal, in decibels.</p>
       <range min="-12" max="+12"/>
     </port>
+
+   <port label="GUIcutoff_hp" dir="input" type="control" hint="default_low, logarithmic">
+	<name>Cutoff Frequency (Hz)</name>
+ 	<range min="10" max="1000"/>
+   </port>
+
+   <port label="GUIcutoff_lp" dir="input" type="control" hint="default_low, logarithmic">
+	<name>Cutoff Frequency (Hz)</name>
+ 	<range min="3000" max="20000"/>
+   </port>
+
+    <port label="gain_1" dir="input" type="control" hint="default_0">
+      <name>Band 1 gain (dB)</name>
+      <range min="-12" max="+12"/>
+    </port>
+
+    <port label="fc_1" dir="input" type="control" hint="logarithmic,default_low">
+      <name>Band 1 frequency (Hz)</name>
+      <range min="40" max="400"/>
+    </port>
+
+    <port label="gain_2" dir="input" type="control" hint="default_0">
+      <name>Band 2 gain (dB)</name>
+      <range min="-12" max="+12"/>
+    </port>
+
+    <port label="fc_2" dir="input" type="control" hint="logarithmic,default_middle">
+      <name>Band 2 frequency (Hz)</name>
+      <range min="200" max="4000"/>
+    </port>
+
+    <port label="gain_3" dir="input" type="control" hint="default_0">
+      <name>Band 3 gain (dB)</name>
+      <range min="-12" max="+12"/>
+    </port>
+
+    <port label="fc_3" dir="input" type="control" hint="logarithmic,default_high">
+      <name>Band 3 frequency (Hz)</name>
+      <range min="800" max="15000"/>
+    </port>
+
+
 
     <!--port label="rms_peak" dir="input" type="control" hint="default_minimum">
       <name>RMS/peak</name>
@@ -223,5 +317,14 @@
     <instance-data label="env_rms" type="float" />
     <instance-data label="env_peak" type="float" />
     <instance-data label="count" type="unsigned int" />
+
+    <instance-data label="iirf_hp" type="iirf_t*"/>
+    <instance-data label="gt_hp" type="iir_stage_t*"/>  
+
+    <instance-data label="iirf_lp" type="iirf_t*"/>
+    <instance-data label="gt_lp" type="iir_stage_t*"/>  
+
+    <instance-data label="filters" type="biquad *"/>
+    <instance-data label="sample_rate" type="float"/>           
   </plugin>
 </ladspa>

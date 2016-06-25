@@ -169,6 +169,7 @@
 
     <instance-data label="iirf_lp" type="iirf_t*"/>
     <instance-data label="gt_lp" type="iir_stage_t*"/>  
+
     <instance-data label="comp_curve" type="CMPR *"/>  
 
     <instance-data label="sample_rate" type="float"/>           
