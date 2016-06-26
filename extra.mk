@@ -19,7 +19,7 @@ sc2_LDFLAGS = util/db.o util/rms.o
 sc3_LDFLAGS = util/db.o util/rms.o
 sc4_LDFLAGS = util/db.o util/rms.o
 sc4m_LDFLAGS = util/db.o util/rms.o
-sc4mB_LDFLAGS = util/db.o util/rms.o
+sc4mB_LDFLAGS = util/db.o util/rms.o util/iir.o 
 se4_LDFLAGS = util/db.o util/rms.o
 
 fftw3_CFLAGS = `pkg-config fftw3f --cflags`
